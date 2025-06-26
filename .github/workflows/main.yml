@@ -1,6 +1,4 @@
-# .github/workflows/rdp.yml
-
-name: RDP Ubuntu via Ngrok
+name: RDP Ubuntu via Ngrok (FIX)
 
 on: [workflow_dispatch]
 
@@ -9,37 +7,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Update & install XFCE + xrdp
+    - name: Update & Install xrdp + desktop
       run: |
         sudo apt update && sudo apt install -y xrdp xfce4 xfce4-goodies
         echo xfce4-session >~/.xsession
         sudo systemctl enable xrdp
         sudo systemctl start xrdp
+        sudo adduser runner xrdp
 
-    - name: Download ngrok & authenticate
+    - name: Download & Set up ngrok
       run: |
         wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
         unzip ngrok-stable-linux-amd64.zip
         sudo mv ngrok /usr/local/bin
         ngrok authtoken ${{ secrets.NGROK_TOKEN }}
 
-    - name: Start ngrok TCP tunnel (port 3389)
+    - name: Start ngrok TCP tunnel
       run: |
-        nohup ngrok tcp 3389 &> ngrok.log &
+        nohup ngrok tcp 3389 &>/dev/null &
         sleep 10
+
+    - name: Get RDP address
+      run: |
         curl -s http://127.0.0.1:4040/api/tunnels > tunnels.json
-        cat tunnels.json
-
-    - name: Output RDP info
-      run: |
-        NGROK_URL=$(curl -s http://127.0.0.1:4040/api/tunnels | grep -o "tcp://[0-9a-zA-Z.:]*")
-        echo "::set-output name=ngrok::$NGROK_URL"
-
-    - name: Display connection info
-      run: |
-        echo "==============================="
-        echo "RDP Aktif!"
-        echo "Alamat: $NGROK_URL"
-        echo "Username: runner"
-        echo "Password: runner"
-        echo "==============================="
+        NGROK_URL=$(cat tunnels.json | grep -o 'tcp://[0-9a-zA-Z\.:]*')
+        echo "🔐 RDP ALAMAT: $NGROK_URL"
+        echo "🧑 USERNAME : runner"
+        echo "🔑 PASSWORD : runner"
