@@ -21,7 +21,7 @@ jobs:
         wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
         unzip ngrok-stable-linux-amd64.zip
         sudo mv ngrok /usr/local/bin
-        ngrok config add-authtoken ${{ secrets.NGROK_TOKEN }}
+        ngrok authtoken ${{ secrets.NGROK_TOKEN }}
 
     - name: Start ngrok TCP tunnel (port 3389)
       run: |
